@@ -189,10 +189,10 @@ export class AppController {
     schema: {
       type: 'object',
       properties: {
-        phone: { type: 'string', example: '+905375244180' },
-        templateName: { type: 'string', example: 'fr_no_response' },
-        templateLanguage: { type: 'string', example: 'fr' },
-        templateMediaURL: { type: 'string', example: 'https://i.ibb.co/CWcyZDs/Wp-FR.jpg' },
+        Phone: { type: 'string', example: '+901234823746' },
+        Language: { type: 'string', example: 'Arabic' },
+        templateName: { type: 'string', example: 'test_api' },
+        parameterName: { type: 'string', example: '?id=645008000746844021' },
       },
     },
   })
@@ -208,17 +208,30 @@ export class AppController {
       }
     }
 
-    const { phone, templateName, templateLanguage, templateMediaURL } = data;
+    const { Phone, Language, templateName, parameterName } = data;
 
-    if (!phone || !templateName || !templateLanguage || !templateMediaURL) {
-      throw new HttpException('phone, templateName, templateLanguage ve templateMediaURL zorunlu', HttpStatus.BAD_REQUEST);
+    if (!Phone || !Language || !templateName || !parameterName) {
+      throw new HttpException('Phone, Language, templateName ve parameterName zorunlu', HttpStatus.BAD_REQUEST);
     }
+
+    // Dil kodunu al
+    const langCode = this.LANGUAGE_MAP[Language.toLowerCase()] || 'en';
+
+    // Dile göre mediaURL belirle
+    const mediaURLMap: Record<string, string> = {
+      'fr': 'https://i.ibb.co/CWcyZDs/Wp-FR.jpg',
+      'it': 'https://i.ibb.co/PcJtDkg/Wp-IT.jpg',
+      'es': 'https://i.ibb.co/HC7cW4Z/Wp-SP.jpg',
+      'en': 'https://i.ibb.co/m8bMb2p/Wp-EN.jpg',
+      'de': 'https://i.ibb.co/PCNczwG/Wp-DE.jpg',
+    };
+    const templateMediaURL = mediaURLMap[langCode] || mediaURLMap['en'];
 
     const payload = {
       messages: [
         {
           from: this.SENDER,
-          to: phone,
+          to: Phone,
           content: {
             templateName: templateName,
             templateData: {
@@ -240,7 +253,7 @@ export class AppController {
                 },
               ],
             },
-            language: templateLanguage,
+            language: langCode,
           },
         },
       ],
