@@ -1,16 +1,6 @@
 import { Controller, Post, Body, HttpException, HttpStatus } from '@nestjs/common';
 import { ApiTags, ApiOperation, ApiBody, ApiResponse } from '@nestjs/swagger';
 
-class DataDto {
-  Phone: string;
-  Language: string;
-  parameterName: string;
-}
-
-class SendWhatsAppDto {
-  data: DataDto;
-}
-
 @ApiTags('WhatsApp')
 @Controller()
 export class AppController {
@@ -26,21 +16,32 @@ export class AppController {
     schema: {
       type: 'object',
       properties: {
-        data: {
-          type: 'object',
-          properties: {
-            Phone: { type: 'string', example: '+901234823746' },
-            Language: { type: 'string', example: 'Arabic' },
-            parameterName: { type: 'string', example: '?id=645008000746844021' },
-          },
-        },
+        Phone: { type: 'string', example: '+901234823746' },
+        Language: { type: 'string', example: 'Arabic' },
+        parameterName: { type: 'string', example: '?id=645008000746844021' },
       },
     },
   })
   @ApiResponse({ status: 200, description: 'Mesaj başarıyla gönderildi' })
   @ApiResponse({ status: 400, description: 'Geçersiz istek' })
-  async sendWhatsApp(@Body() body: SendWhatsAppDto) {
-    const { Phone, Language, parameterName } = body.data;
+  async sendWhatsApp(@Body() body: any) {
+    // Zoho string olarak gönderebilir, parse edelim
+    let data = body;
+    if (typeof body === 'string') {
+      try {
+        data = JSON.parse(body);
+      } catch {
+        throw new HttpException('Invalid JSON', HttpStatus.BAD_REQUEST);
+      }
+    }
+
+    const Phone = data.Phone;
+    const Language = data.Language;
+    const parameterName = data.parameterName;
+
+    if (!Phone || !Language || !parameterName) {
+      throw new HttpException('Phone, Language ve parameterName zorunlu', HttpStatus.BAD_REQUEST);
+    }
 
     const payload = {
       messages: [
@@ -70,13 +71,13 @@ export class AppController {
         body: JSON.stringify(payload),
       });
 
-      const data = await response.json();
+      const result = await response.json();
 
       if (!response.ok) {
-        throw new HttpException(data, response.status);
+        throw new HttpException(result, response.status);
       }
 
-      return data;
+      return result;
     } catch (error) {
       if (error instanceof HttpException) throw error;
       throw new HttpException('Infobip API error', HttpStatus.INTERNAL_SERVER_ERROR);
