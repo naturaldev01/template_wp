@@ -144,6 +144,72 @@ let AppController = class AppController {
             throw new common_1.HttpException('Eazybe API error', common_1.HttpStatus.INTERNAL_SERVER_ERROR);
         }
     }
+    async sendNoResponse(body) {
+        let data = body;
+        if (typeof body === 'string') {
+            try {
+                data = JSON.parse(body);
+            }
+            catch {
+                throw new common_1.HttpException('Invalid JSON', common_1.HttpStatus.BAD_REQUEST);
+            }
+        }
+        const { phone, templateName, templateLanguage, templateMediaURL } = data;
+        if (!phone || !templateName || !templateLanguage || !templateMediaURL) {
+            throw new common_1.HttpException('phone, templateName, templateLanguage ve templateMediaURL zorunlu', common_1.HttpStatus.BAD_REQUEST);
+        }
+        const payload = {
+            messages: [
+                {
+                    from: this.SENDER,
+                    to: phone,
+                    content: {
+                        templateName: templateName,
+                        templateData: {
+                            body: {
+                                placeholders: [],
+                            },
+                            header: {
+                                type: 'IMAGE',
+                                mediaUrl: templateMediaURL,
+                            },
+                            buttons: [
+                                {
+                                    type: 'QUICK_REPLY',
+                                    parameter: "Ça m'intéresse",
+                                },
+                                {
+                                    type: 'QUICK_REPLY',
+                                    parameter: 'Pas maintenant',
+                                },
+                            ],
+                        },
+                        language: templateLanguage,
+                    },
+                },
+            ],
+        };
+        try {
+            const response = await fetch(`${this.API_BASE_URL}/whatsapp/1/message/template`, {
+                method: 'POST',
+                headers: {
+                    'Authorization': `App ${this.API_KEY}`,
+                    'Content-Type': 'application/json',
+                },
+                body: JSON.stringify(payload),
+            });
+            const result = await response.json();
+            if (!response.ok) {
+                throw new common_1.HttpException(result, response.status);
+            }
+            return result;
+        }
+        catch (error) {
+            if (error instanceof common_1.HttpException)
+                throw error;
+            throw new common_1.HttpException('Infobip API error', common_1.HttpStatus.INTERNAL_SERVER_ERROR);
+        }
+    }
 };
 exports.AppController = AppController;
 __decorate([
@@ -191,6 +257,28 @@ __decorate([
     __metadata("design:paramtypes", [Object]),
     __metadata("design:returntype", Promise)
 ], AppController.prototype, "scheduleEazybe", null);
+__decorate([
+    (0, common_1.Post)('send-no-response'),
+    (0, swagger_1.ApiOperation)({ summary: 'No Response WhatsApp template mesajı gönder (header image + quick reply buttons)' }),
+    (0, swagger_1.ApiBody)({
+        description: 'No Response template için gerekli bilgiler',
+        schema: {
+            type: 'object',
+            properties: {
+                phone: { type: 'string', example: '+905375244180' },
+                templateName: { type: 'string', example: 'fr_no_response' },
+                templateLanguage: { type: 'string', example: 'fr' },
+                templateMediaURL: { type: 'string', example: 'https://i.ibb.co/CWcyZDs/Wp-FR.jpg' },
+            },
+        },
+    }),
+    (0, swagger_1.ApiResponse)({ status: 200, description: 'Mesaj başarıyla gönderildi' }),
+    (0, swagger_1.ApiResponse)({ status: 400, description: 'Geçersiz istek' }),
+    __param(0, (0, common_1.Body)()),
+    __metadata("design:type", Function),
+    __metadata("design:paramtypes", [Object]),
+    __metadata("design:returntype", Promise)
+], AppController.prototype, "sendNoResponse", null);
 exports.AppController = AppController = __decorate([
     (0, swagger_1.ApiTags)('WhatsApp'),
     (0, common_1.Controller)()

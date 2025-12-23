@@ -181,4 +181,91 @@ export class AppController {
       throw new HttpException('Eazybe API error', HttpStatus.INTERNAL_SERVER_ERROR);
     }
   }
+
+  @Post('send-no-response')
+  @ApiOperation({ summary: 'No Response WhatsApp template mesajı gönder (header image + quick reply buttons)' })
+  @ApiBody({
+    description: 'No Response template için gerekli bilgiler',
+    schema: {
+      type: 'object',
+      properties: {
+        phone: { type: 'string', example: '+905375244180' },
+        templateName: { type: 'string', example: 'fr_no_response' },
+        templateLanguage: { type: 'string', example: 'fr' },
+        templateMediaURL: { type: 'string', example: 'https://i.ibb.co/CWcyZDs/Wp-FR.jpg' },
+      },
+    },
+  })
+  @ApiResponse({ status: 200, description: 'Mesaj başarıyla gönderildi' })
+  @ApiResponse({ status: 400, description: 'Geçersiz istek' })
+  async sendNoResponse(@Body() body: any) {
+    let data = body;
+    if (typeof body === 'string') {
+      try {
+        data = JSON.parse(body);
+      } catch {
+        throw new HttpException('Invalid JSON', HttpStatus.BAD_REQUEST);
+      }
+    }
+
+    const { phone, templateName, templateLanguage, templateMediaURL } = data;
+
+    if (!phone || !templateName || !templateLanguage || !templateMediaURL) {
+      throw new HttpException('phone, templateName, templateLanguage ve templateMediaURL zorunlu', HttpStatus.BAD_REQUEST);
+    }
+
+    const payload = {
+      messages: [
+        {
+          from: this.SENDER,
+          to: phone,
+          content: {
+            templateName: templateName,
+            templateData: {
+              body: {
+                placeholders: [],
+              },
+              header: {
+                type: 'IMAGE',
+                mediaUrl: templateMediaURL,
+              },
+              buttons: [
+                {
+                  type: 'QUICK_REPLY',
+                  parameter: "Ça m'intéresse",
+                },
+                {
+                  type: 'QUICK_REPLY',
+                  parameter: 'Pas maintenant',
+                },
+              ],
+            },
+            language: templateLanguage,
+          },
+        },
+      ],
+    };
+
+    try {
+      const response = await fetch(`${this.API_BASE_URL}/whatsapp/1/message/template`, {
+        method: 'POST',
+        headers: {
+          'Authorization': `App ${this.API_KEY}`,
+          'Content-Type': 'application/json',
+        },
+        body: JSON.stringify(payload),
+      });
+
+      const result = await response.json();
+
+      if (!response.ok) {
+        throw new HttpException(result, response.status);
+      }
+
+      return result;
+    } catch (error) {
+      if (error instanceof HttpException) throw error;
+      throw new HttpException('Infobip API error', HttpStatus.INTERNAL_SERVER_ERROR);
+    }
+  }
 }
