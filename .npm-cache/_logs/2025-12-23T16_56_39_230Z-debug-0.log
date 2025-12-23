@@ -1,0 +1,20 @@
+0 verbose cli /usr/local/bin/node /usr/local/bin/npm
+1 info using npm@11.6.2
+2 info using node@v24.11.1
+3 silly config load:file:/usr/local/lib/node_modules/npm/npmrc
+4 silly config load:file:/Users/oguzhan.sivri/Desktop/template_wp/.npmrc
+5 silly config load:file:/Users/oguzhan.sivri/.npmrc
+6 silly config load:file:/usr/local/etc/npmrc
+7 verbose title npm ls @scarf/scarf
+8 verbose argv "ls" "@scarf/scarf" "--json" "--long"
+9 verbose logfile logs-max:10 dir:/Users/oguzhan.sivri/Desktop/template_wp/.npm-cache/_logs/2025-12-23T16_56_39_230Z-
+10 verbose logfile /Users/oguzhan.sivri/Desktop/template_wp/.npm-cache/_logs/2025-12-23T16_56_39_230Z-debug-0.log
+11 silly logfile done cleaning log files
+12 silly packumentCache heap:4496293888 maxSize:1124073472 maxEntrySize:562036736
+13 verbose shrinkwrap failed to load node_modules/.package-lock.json out of date, updated: node_modules
+14 verbose cwd /Users/oguzhan.sivri/Desktop/template_wp
+15 verbose os Darwin 24.6.0
+16 verbose node v24.11.1
+17 verbose npm  v11.6.2
+18 verbose exit 0
+19 info ok
