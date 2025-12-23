@@ -44,6 +44,7 @@ export class AppController {
       properties: {
         Phone: { type: 'string', example: '+901234823746' },
         Language: { type: 'string', example: 'Arabic' },
+        templateName: { type: 'string', example: 'test_api' },
         parameterName: { type: 'string', example: '?id=645008000746844021' },
       },
     },
@@ -63,10 +64,11 @@ export class AppController {
 
     const Phone = data.Phone;
     const Language = data.Language;
+    const templateName = data.templateName;
     const parameterName = data.parameterName;
 
-    if (!Phone || !Language || !parameterName) {
-      throw new HttpException('Phone, Language ve parameterName zorunlu', HttpStatus.BAD_REQUEST);
+    if (!Phone || !Language || !templateName || !parameterName) {
+      throw new HttpException('Phone, Language, templateName ve parameterName zorunlu', HttpStatus.BAD_REQUEST);
     }
 
     // Dil kodunu al
@@ -78,11 +80,17 @@ export class AppController {
           from: this.SENDER,
           to: Phone,
           content: {
-            templateName: 'test_api',
+            templateName: templateName,
             templateData: {
               body: {
-                placeholders: [parameterName],
+                placeholders: [],
               },
+              buttons: [
+                {
+                  type: 'URL',
+                  parameter: parameterName,
+                },
+              ],
             },
             language: langCode,
           },

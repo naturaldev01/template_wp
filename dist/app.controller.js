@@ -15,34 +15,66 @@ Object.defineProperty(exports, "__esModule", { value: true });
 exports.AppController = void 0;
 const common_1 = require("@nestjs/common");
 const swagger_1 = require("@nestjs/swagger");
-class DataDto {
-    Phone;
-    Language;
-    parameterName;
-}
-class SendWhatsAppDto {
-    data;
-}
 let AppController = class AppController {
     API_BASE_URL = 'https://mpz66w.api.infobip.com';
     API_KEY = 'dd6a2058f6eb6e0c19596de6bb875c2d-8c2b4ae1-249a-4e12-b53d-ad769ed19e83';
     TEMPLATE_ID = '743966878172664';
     SENDER = '902129190555';
+    LANGUAGE_MAP = {
+        'arabic': 'ar',
+        'english': 'en',
+        'turkish': 'tr',
+        'french': 'fr',
+        'german': 'de',
+        'spanish': 'es',
+        'portuguese': 'pt_PT',
+        'russian': 'ru',
+        'chinese': 'zh_CN',
+        'japanese': 'ja',
+        'korean': 'ko',
+        'italian': 'it',
+        'dutch': 'nl',
+        'polish': 'pl',
+        'hebrew': 'he',
+        'hindi': 'hi',
+        'indonesian': 'id',
+        'malay': 'ms',
+        'thai': 'th',
+        'vietnamese': 'vi',
+        'persian': 'fa',
+        'urdu': 'ur',
+    };
     async sendWhatsApp(body) {
-        const { Phone, Language, parameterName } = body.data;
+        let data = body;
+        if (typeof body === 'string') {
+            try {
+                data = JSON.parse(body);
+            }
+            catch {
+                throw new common_1.HttpException('Invalid JSON', common_1.HttpStatus.BAD_REQUEST);
+            }
+        }
+        const Phone = data.Phone;
+        const Language = data.Language;
+        const templateName = data.templateName;
+        const parameterName = data.parameterName;
+        if (!Phone || !Language || !templateName || !parameterName) {
+            throw new common_1.HttpException('Phone, Language, templateName ve parameterName zorunlu', common_1.HttpStatus.BAD_REQUEST);
+        }
+        const langCode = this.LANGUAGE_MAP[Language.toLowerCase()] || 'en';
         const payload = {
             messages: [
                 {
                     from: this.SENDER,
                     to: Phone,
                     content: {
-                        templateName: 'test_api',
+                        templateName: templateName,
                         templateData: {
                             body: {
                                 placeholders: [parameterName],
                             },
                         },
-                        language: Language.toLowerCase(),
+                        language: langCode,
                     },
                 },
             ],
@@ -56,11 +88,11 @@ let AppController = class AppController {
                 },
                 body: JSON.stringify(payload),
             });
-            const data = await response.json();
+            const result = await response.json();
             if (!response.ok) {
-                throw new common_1.HttpException(data, response.status);
+                throw new common_1.HttpException(result, response.status);
             }
-            return data;
+            return result;
         }
         catch (error) {
             if (error instanceof common_1.HttpException)
@@ -78,14 +110,10 @@ __decorate([
         schema: {
             type: 'object',
             properties: {
-                data: {
-                    type: 'object',
-                    properties: {
-                        Phone: { type: 'string', example: '+901234823746' },
-                        Language: { type: 'string', example: 'Arabic' },
-                        parameterName: { type: 'string', example: '?id=645008000746844021' },
-                    },
-                },
+                Phone: { type: 'string', example: '+901234823746' },
+                Language: { type: 'string', example: 'Arabic' },
+                templateName: { type: 'string', example: 'test_api' },
+                parameterName: { type: 'string', example: '?id=645008000746844021' },
             },
         },
     }),
@@ -93,7 +121,7 @@ __decorate([
     (0, swagger_1.ApiResponse)({ status: 400, description: 'Geçersiz istek' }),
     __param(0, (0, common_1.Body)()),
     __metadata("design:type", Function),
-    __metadata("design:paramtypes", [SendWhatsAppDto]),
+    __metadata("design:paramtypes", [Object]),
     __metadata("design:returntype", Promise)
 ], AppController.prototype, "sendWhatsApp", null);
 exports.AppController = AppController = __decorate([
