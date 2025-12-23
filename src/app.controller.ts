@@ -9,6 +9,32 @@ export class AppController {
   private readonly TEMPLATE_ID = '743966878172664';
   private readonly SENDER = '902129190555';
 
+  // Dil mapping - Infobip ISO kodları kullanıyor
+  private readonly LANGUAGE_MAP: Record<string, string> = {
+    'arabic': 'ar',
+    'english': 'en',
+    'turkish': 'tr',
+    'french': 'fr',
+    'german': 'de',
+    'spanish': 'es',
+    'portuguese': 'pt_PT',
+    'russian': 'ru',
+    'chinese': 'zh_CN',
+    'japanese': 'ja',
+    'korean': 'ko',
+    'italian': 'it',
+    'dutch': 'nl',
+    'polish': 'pl',
+    'hebrew': 'he',
+    'hindi': 'hi',
+    'indonesian': 'id',
+    'malay': 'ms',
+    'thai': 'th',
+    'vietnamese': 'vi',
+    'persian': 'fa',
+    'urdu': 'ur',
+  };
+
   @Post('send-whatsapp')
   @ApiOperation({ summary: 'WhatsApp template mesajı gönder' })
   @ApiBody({
@@ -43,6 +69,9 @@ export class AppController {
       throw new HttpException('Phone, Language ve parameterName zorunlu', HttpStatus.BAD_REQUEST);
     }
 
+    // Dil kodunu al
+    const langCode = this.LANGUAGE_MAP[Language.toLowerCase()] || 'en';
+
     const payload = {
       messages: [
         {
@@ -55,7 +84,7 @@ export class AppController {
                 placeholders: [parameterName],
               },
             },
-            language: Language.toLowerCase(),
+            language: langCode,
           },
         },
       ],
