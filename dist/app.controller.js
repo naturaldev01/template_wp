@@ -71,8 +71,14 @@ let AppController = class AppController {
                         templateName: templateName,
                         templateData: {
                             body: {
-                                placeholders: [parameterName],
+                                placeholders: [],
                             },
+                            buttons: [
+                                {
+                                    type: 'URL',
+                                    parameter: parameterName,
+                                },
+                            ],
                         },
                         language: langCode,
                     },
@@ -100,6 +106,44 @@ let AppController = class AppController {
             throw new common_1.HttpException('Infobip API error', common_1.HttpStatus.INTERNAL_SERVER_ERROR);
         }
     }
+    async scheduleEazybe(body) {
+        const EAZYBE_TOKEN = 'eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJvcmdfaWQiOjc2NTIxLCJpYXQiOjE3MzEzMTQwOTQsImV4cCI6MTczMzExNDA5NH0.vO3Urm1gM3Y-7RWrbo44VqxpTLkmgQm-KhFzlv0z4WY';
+        let data = body;
+        if (typeof body === 'string') {
+            try {
+                data = JSON.parse(body);
+            }
+            catch {
+                throw new common_1.HttpException('Invalid JSON', common_1.HttpStatus.BAD_REQUEST);
+            }
+        }
+        const { from, to, message, name, time } = data;
+        if (!from || !to || !message || !name || !time) {
+            throw new common_1.HttpException('from, to, message, name ve time zorunlu', common_1.HttpStatus.BAD_REQUEST);
+        }
+        const payload = { from, to, message, name, time };
+        try {
+            const response = await fetch('https://api.eazybe.com/v2/scheduler/public-scheduler', {
+                method: 'POST',
+                headers: {
+                    'Authorization': EAZYBE_TOKEN,
+                    'Content-Type': 'application/json',
+                    'Accept': 'application/json',
+                },
+                body: JSON.stringify(payload),
+            });
+            const result = await response.json();
+            if (!response.ok) {
+                throw new common_1.HttpException(result, response.status);
+            }
+            return result;
+        }
+        catch (error) {
+            if (error instanceof common_1.HttpException)
+                throw error;
+            throw new common_1.HttpException('Eazybe API error', common_1.HttpStatus.INTERNAL_SERVER_ERROR);
+        }
+    }
 };
 exports.AppController = AppController;
 __decorate([
@@ -124,6 +168,29 @@ __decorate([
     __metadata("design:paramtypes", [Object]),
     __metadata("design:returntype", Promise)
 ], AppController.prototype, "sendWhatsApp", null);
+__decorate([
+    (0, common_1.Post)('schedule-eazybe'),
+    (0, swagger_1.ApiOperation)({ summary: 'Eazybe üzerinden mesaj zamanla' }),
+    (0, swagger_1.ApiBody)({
+        description: 'Eazybe scheduler için gerekli bilgiler',
+        schema: {
+            type: 'object',
+            properties: {
+                from: { type: 'string', example: 'system.admin@natural.clinic' },
+                to: { type: 'string', example: '905375244180' },
+                message: { type: 'string', example: 'Hello World' },
+                name: { type: 'string', example: 'Vats' },
+                time: { type: 'string', example: '2025-12-18T17:09:00.000Z' },
+            },
+        },
+    }),
+    (0, swagger_1.ApiResponse)({ status: 200, description: 'Mesaj başarıyla zamanlandı' }),
+    (0, swagger_1.ApiResponse)({ status: 400, description: 'Geçersiz istek' }),
+    __param(0, (0, common_1.Body)()),
+    __metadata("design:type", Function),
+    __metadata("design:paramtypes", [Object]),
+    __metadata("design:returntype", Promise)
+], AppController.prototype, "scheduleEazybe", null);
 exports.AppController = AppController = __decorate([
     (0, swagger_1.ApiTags)('WhatsApp'),
     (0, common_1.Controller)()

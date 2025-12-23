@@ -5,4 +5,5 @@ export declare class AppController {
     private readonly SENDER;
     private readonly LANGUAGE_MAP;
     sendWhatsApp(body: any): Promise<any>;
+    scheduleEazybe(body: any): Promise<any>;
 }

@@ -120,4 +120,65 @@ export class AppController {
       throw new HttpException('Infobip API error', HttpStatus.INTERNAL_SERVER_ERROR);
     }
   }
+
+  @Post('schedule-eazybe')
+  @ApiOperation({ summary: 'Eazybe üzerinden mesaj zamanla' })
+  @ApiBody({
+    description: 'Eazybe scheduler için gerekli bilgiler',
+    schema: {
+      type: 'object',
+      properties: {
+        from: { type: 'string', example: 'system.admin@natural.clinic' },
+        to: { type: 'string', example: '905375244180' },
+        message: { type: 'string', example: 'Hello World' },
+        name: { type: 'string', example: 'Vats' },
+        time: { type: 'string', example: '2025-12-18T17:09:00.000Z' },
+      },
+    },
+  })
+  @ApiResponse({ status: 200, description: 'Mesaj başarıyla zamanlandı' })
+  @ApiResponse({ status: 400, description: 'Geçersiz istek' })
+  async scheduleEazybe(@Body() body: any) {
+    const EAZYBE_TOKEN = 'eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJvcmdfaWQiOjc2NTIxLCJpYXQiOjE3MzEzMTQwOTQsImV4cCI6MTczMzExNDA5NH0.vO3Urm1gM3Y-7RWrbo44VqxpTLkmgQm-KhFzlv0z4WY';
+
+    let data = body;
+    if (typeof body === 'string') {
+      try {
+        data = JSON.parse(body);
+      } catch {
+        throw new HttpException('Invalid JSON', HttpStatus.BAD_REQUEST);
+      }
+    }
+
+    const { from, to, message, name, time } = data;
+
+    if (!from || !to || !message || !name || !time) {
+      throw new HttpException('from, to, message, name ve time zorunlu', HttpStatus.BAD_REQUEST);
+    }
+
+    const payload = { from, to, message, name, time };
+
+    try {
+      const response = await fetch('https://api.eazybe.com/v2/scheduler/public-scheduler', {
+        method: 'POST',
+        headers: {
+          'Authorization': EAZYBE_TOKEN,
+          'Content-Type': 'application/json',
+          'Accept': 'application/json',
+        },
+        body: JSON.stringify(payload),
+      });
+
+      const result = await response.json();
+
+      if (!response.ok) {
+        throw new HttpException(result, response.status);
+      }
+
+      return result;
+    } catch (error) {
+      if (error instanceof HttpException) throw error;
+      throw new HttpException('Eazybe API error', HttpStatus.INTERNAL_SERVER_ERROR);
+    }
+  }
 }
